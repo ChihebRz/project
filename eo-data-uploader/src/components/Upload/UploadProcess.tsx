@@ -20,7 +20,8 @@ const UploadProcess = () => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [basePath] = useState("C:\\Users\\rezgu\\OneDrive\\Desktop\\Donnees_EODC"); // Chemin fixe
+  const [basePath] = useState("C:\\Users\\PC-DELL\\Downloads\\Donnees_EODC");
+  // Chemin fixe
 
   const handleUpload = async () => {
     setUploading(true);

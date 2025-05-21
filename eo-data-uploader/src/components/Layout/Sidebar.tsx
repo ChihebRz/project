@@ -1,8 +1,16 @@
-
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, BarChart3, Upload, MessageSquare, Home } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  BarChart3,
+  Upload,
+  MessageSquare,
+  Home,
+  Cpu,
+  TrendingUp // ✅ Icon for Forecast
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -31,12 +39,14 @@ const sidebarVariants = {
 
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const location = useLocation();
-  
+
   const navItems = [
     { path: "/", label: "Home", icon: Home },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/upload", label: "Upload Process", icon: Upload },
     { path: "/chatbot", label: "AI Assistant", icon: MessageSquare },
+    { path: "/cluster", label: "Cluster", icon: Cpu },
+    { path: "/forecast", label: "Forecast", icon: TrendingUp } // ✅ Added Forecast page
   ];
 
   return (
@@ -55,7 +65,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
       </div>
-      
+
       <div className="p-4 flex items-center justify-center">
         <motion.div
           initial={false}
@@ -85,9 +95,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       <nav className="mt-6 flex-1">
         <ul className="space-y-1 px-2">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
             const Icon = item.icon;
-            
             return (
               <li key={item.path}>
                 <NavLink
@@ -120,7 +128,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           })}
         </ul>
       </nav>
-      
+
       <div className="p-4 flex items-center">
         {isOpen ? (
           <div className="text-xs text-sidebar-foreground/60 italic">

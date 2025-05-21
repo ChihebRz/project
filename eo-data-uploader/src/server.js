@@ -6,9 +6,9 @@ import path from "path";
 import { parse } from "csv-parse";
 import chardet from "chardet";
 import { Ollama } from "ollama";
+import { spawn } from "child_process";
 
 const { Pool } = pg;
-
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -23,19 +23,9 @@ const pool = new Pool({
 
 const ollama = new Ollama({ host: "http://localhost:11434" });
 
-// Schéma générique basé sur tes uploads (à ajuster après ta réponse)
-const databaseSchema = `
-Tables disponibles dans la base de données "eo_datacenter":
-1. public."cpu"
-   - Columns: "Date" (DATE), "CPU_Usage" (NUMERIC, assumed), "Year" (INTEGER), "Quarter" (INTEGER), "Month" (INTEGER), "Day" (INTEGER)
-2. public."disk"
-   - Columns: "Date" (DATE), "Disk_Usage" (NUMERIC, in GB, assumed), "Year" (INTEGER), "Quarter" (INTEGER), "Month" (INTEGER), "Day" (INTEGER)
-3. public."info"
-   - Columns: "Date" (DATE), "Status" (TEXT, assumed), "Year" (INTEGER), "Quarter" (INTEGER), "Month" (INTEGER), "Day" (INTEGER)
-Note: Les dates sont au format 'YYYY-MM-DD'. Les noms de colonnes et tables sont sensibles à la casse et doivent être entourés de guillemets doubles (ex. "CPU_Usage", public."cpu"). Si une colonne supposée (comme "CPU_Usage") n’existe pas, utilise les colonnes disponibles ou raisonne autrement.
-`;
+const databaseSchema = `...`; // Keep your schema definition here (truncated for brevity)
 
-// Fonctions existantes (upload) inchangées
+// 🔁 Encoding helpers
 function normalizeEncoding(encoding) {
   const encodingMap = {
     "ISO-8859-1": "latin1",
@@ -54,6 +44,7 @@ async function detectDelimiter(filePath, encoding) {
   );
 }
 
+// 📁 Directory Upload Logic
 async function checkFolderUploaded(folderDate, tables) {
   const client = await pool.connect();
   try {
@@ -121,9 +112,7 @@ app.post("/upload-directory", async (req, res) => {
 
     const tables = ["cpu", "disk", "info"];
     for (const folder of folders) {
-      const folderDate = folder;
-      if (await checkFolderUploaded(folderDate, tables)) continue;
-
+      if (await checkFolderUploaded(folder, tables)) continue;
       const folderPath = path.join(directory, folder);
       const files = (await fs.readdir(folderPath)).filter(f => f.endsWith(".csv"));
       for (const file of files) {
@@ -134,88 +123,145 @@ app.post("/upload-directory", async (req, res) => {
         else if (file.includes("vInfo")) tableName = "info";
         else continue;
 
-        const result = await processAndUploadCsv(filePath, tableName, folderDate);
+        const result = await processAndUploadCsv(filePath, tableName, folder);
         uploadedFiles.push(`${folder}/${file}`);
         console.log(result);
       }
     }
     res.json({ uploadedFiles });
   } catch (error) {
-    console.error(`Error in upload-directory: ${error.message}`);
+    console.error(`Upload error: ${error.message}`);
     res.status(500).json({ error: "Upload failed", details: error.message });
   }
 });
 
-// Route avancée pour le chatbot
+// 📦 Predict VM cluster from model
+app.post("/predict", (req, res) => {
+  const {
+    cpu, memory, nics, disks,
+    in_use_mib, sockets, cores_per_socket,
+    capacity_mib, provisioned_mib
+  } = req.body;
+
+  if ([cpu, memory, nics, disks, in_use_mib, sockets, cores_per_socket, capacity_mib, provisioned_mib]
+    .some(v => v === undefined || v === null || isNaN(v))) {
+    return res.status(400).json({ error: "Missing or invalid input data" });
+  }
+
+  const inputVector = [
+    cpu, memory, nics, disks,
+    in_use_mib, sockets, cores_per_socket,
+    capacity_mib, provisioned_mib
+  ];
+
+  console.log('📦 Sending features to Python:', inputVector);
+  const pythonProcess = spawn('python', ['predict_cluster.py', ...inputVector.map(String)]);
+  let result = '';
+
+  pythonProcess.stdout.on('data', data => result += data.toString());
+  pythonProcess.stderr.on('data', data => console.error(`stderr: ${data}`));
+
+  pythonProcess.on('close', code => {
+    if (code === 0) {
+      try {
+        const prediction = JSON.parse(result);
+        res.json(prediction);
+      } catch (err) {
+        res.status(500).send("Invalid output from Python script");
+      }
+    } else {
+      res.status(500).send("Error in Python script");
+    }
+  });
+});
+
+// 📡 Get VM list
+app.get("/vms", async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT DISTINCT "VM" FROM public.info ORDER BY "VM"`);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).send("Error fetching VMs");
+  }
+});
+
+// 📡 Get latest VM data
+app.get("/vm/:vmName", async (req, res) => {
+  const vmName = req.params.vmName;
+  try {
+    const query = `
+      SELECT i."VM_UUID", i."CPUs", i."Memory", i."Provisioned_MiB", i."In_Use_MiB", i."NICs", 
+             c."Sockets", c."Cores_p/s" AS "Cores_p_s", d."Capacity_MiB"
+      FROM public.info i
+      LEFT JOIN public.cpu c ON i."VM_UUID" = c."VM_UUID"
+      LEFT JOIN public.disk d ON i."VM_UUID" = d."VM_UUID"
+      WHERE i."VM" = $1
+      ORDER BY i."Date" DESC
+      LIMIT 1;
+    `;
+    const result = await pool.query(query, [vmName]);
+    if (result.rows.length === 0) return res.status(404).send("VM not found");
+
+    const row = result.rows[0];
+    res.json({
+      CPUs: row.CPUs,
+      Memory: row.Memory,
+      NICs: row.NICs,
+      Disks: 1,
+      In_Use_MiB: row.In_Use_MiB,
+      Sockets: row.Sockets,
+      Cores_p_s: row.Cores_p_s,
+      Capacity_MiB: row.Capacity_MiB,
+      Provisioned_MiB: row.Provisioned_MiB
+    });
+  } catch (err) {
+    res.status(500).send("Error fetching VM data");
+  }
+});
+
+// 🤖 Chatbot
 app.post("/chat", async (req, res) => {
   const { message } = req.body;
-  console.log(`Chatbot received: "${message}"`);
   try {
-    // Étape 1 : Générer une requête SQL avec Mistral
-    const sqlPrompt = `
-      You are an advanced AI assistant like Grok, with access to a PostgreSQL database. Based on this schema:
-      ${databaseSchema}
-      Generate a valid PostgreSQL query to answer the user's question: "${message}". 
-      - Use correct syntax: double quotes for table/column names (e.g., public."cpu"."CPU_Usage").
-      - Handle typos gracefully (e.g., "virtulas" → "virtual", "coloum" → "column").
-      - If the question implies counting VMs but there's no "Server_Name", use DISTINCT "Date" or another creative approach.
-      - Return only the SQL query as plain text.
-      Examples:
-      - "how many virtual machines" → SELECT COUNT(DISTINCT "Date") as vm_days FROM public."info"
-      - "cpu usage last week" → SELECT "Date", AVG("CPU_Usage") FROM public."cpu" WHERE "Date" >= CURRENT_DATE - INTERVAL '7 days' GROUP BY "Date"
-      - "highest disk usage" → SELECT "Date", MAX("Disk_Usage") FROM public."disk" GROUP BY "Date" ORDER BY MAX("Disk_Usage") DESC LIMIT 1
-    `;
+    const sqlPrompt = `...`; // Keep your prompt from the previous script
     const sqlResponse = await ollama.generate({
       model: "mistral",
-      prompt: sqlPrompt,
+      prompt: sqlPrompt.replace("MESSAGE", message),
       max_tokens: 150,
     });
-    let sqlQuery = sqlResponse.response.trim();
-    console.log(`Generated SQL query: "${sqlQuery}"`);
 
-    // Étape 2 : Valider la requête
+    let sqlQuery = sqlResponse.response.trim();
     if (!sqlQuery.toLowerCase().startsWith("select")) {
       sqlQuery = `SELECT COUNT(DISTINCT "Date") as data_days FROM public."info"`;
-      console.log(`Invalid query detected, using fallback: "${sqlQuery}"`);
     }
 
-    // Étape 3 : Exécuter la requête SQL
-    let dbResult;
     const client = await pool.connect();
+    let dbResult;
     try {
       dbResult = await client.query(sqlQuery);
-      console.log(`Database result: ${JSON.stringify(dbResult.rows)}`);
-    } catch (dbError) {
-      console.error(`SQL execution error: ${dbError.message}`);
-      dbResult = { rows: [], error: dbError.message };
+    } catch (err) {
+      dbResult = { rows: [], error: err.message };
     } finally {
       client.release();
     }
 
-    // Étape 4 : Générer une réponse naturelle
-    const answerPrompt = `
-      You are an advanced AI assistant like Grok. The user asked: "${message}"
-      Database schema: ${databaseSchema}
-      Query result: ${JSON.stringify(dbResult.rows)}
-      ${dbResult.error ? `Query error: ${dbResult.error}` : ""}
-      Provide a concise, conversational answer based on the data.
-      - If there's data, summarize it naturally (e.g., "There’s data for 15 distinct days, which might indicate the number of VMs.").
-      - If there's an error, explain simply and suggest a fix (e.g., "I couldn’t find that column. What do you mean by X?").
-      - Handle typos or vague questions intelligently (e.g., "virtulas" → "virtual machines").
-    `;
+    const answerPrompt = `...`; // Also reuse your answerPrompt here
+
     const answerResponse = await ollama.generate({
       model: "mistral",
-      prompt: answerPrompt,
+      prompt: answerPrompt
+        .replace("MESSAGE", message)
+        .replace("RESULT", JSON.stringify(dbResult.rows))
+        .replace("ERROR", dbResult.error || ""),
       max_tokens: 200,
     });
-    const reply = answerResponse.response.trim();
-    console.log(`Mistral response: "${reply}"`);
 
+    const reply = answerResponse.response.trim();
     res.json({ reply });
   } catch (error) {
-    console.error(`Chatbot error: ${error.message}`);
-    res.status(500).json({ reply: "Oops, something went wrong. Try rephrasing your question!" });
+    res.status(500).json({ reply: "Oops, something went wrong." });
   }
 });
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+// 🚀 Launch server
+app.listen(5000, () => console.log("✅ Server running on http://localhost:5000"));

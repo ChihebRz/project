@@ -96,7 +96,7 @@ Allowed Values:
 
 🚫 Do not invent column names like "Power_State" or "VM_ID"
 ✅ Use "Powerstate" (not "Power_State")
-✅ Use "VM" or "VM_UUID" (if it exists)
+✅ Use "VM" 
 
 
 Context:

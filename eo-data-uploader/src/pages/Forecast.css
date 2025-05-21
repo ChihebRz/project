@@ -1,0 +1,113 @@
+.forecast-page {
+  font-family: 'Segoe UI', sans-serif;
+  padding: 30px 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vm-forecast {
+  width: 100%;
+}
+
+.forecast-page select {
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 20px;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status-right {
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.cutoff-text b {
+  color: #c0392b;
+}
+
+.badge {
+  padding: 5px 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.badge-risk {
+  background-color: #ffe6e0;
+  border-color: #e67e22;
+  color: #a93226;
+}
+
+.badge-safe {
+  background-color: #e6f4ea;
+  border-color: #27ae60;
+  color: #1e8449;
+}
+
+.metrics {
+  text-align: left;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.metrics b {
+  color: #333;
+}
+
+.table-raw {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table-raw th,
+.table-raw td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.toggle-table {
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: underline;
+  margin-top: 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: #f3f3f3;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.tabs .active-tab {
+  background: white;
+  border: 2px solid #ccc;
+}

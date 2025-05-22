@@ -8,12 +8,25 @@ import {
   PointElement,
   Tooltip,
   Legend,
+  ChartOptions,
 } from "chart.js";
 
+// Register components
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
-const ForecastChart = ({ forecast }) => {
-  if (!forecast || !forecast.length) return null;
+// Define prop types
+type ForecastEntry = {
+  date: string;
+  yhat: number;
+};
+
+type ForecastChartProps = {
+  forecast: ForecastEntry[];
+  provisioned: number;
+};
+
+const ForecastChart: React.FC<ForecastChartProps> = ({ forecast, provisioned }) => {
+  if (!forecast || forecast.length === 0) return null;
 
   const labels = forecast.map((d) => d.date);
   const values = forecast.map((d) => d.yhat);
@@ -30,27 +43,43 @@ const ForecastChart = ({ forecast }) => {
         tension: 0.3,
         pointRadius: 3,
         pointHoverRadius: 5,
-      }
-    ]
+      },
+      
+    ],
   };
 
-  const options = {
+  const options: ChartOptions<"line"> = {
     responsive: true,
     plugins: {
-      legend: { position: "top" },
+      legend: {
+        position: "top", // ✅ casted to the correct literal type
+      },
       tooltip: {
         callbacks: {
-          label: (ctx) => `Forecasted Usage: ${Math.round(ctx.raw).toLocaleString()} MiB`
-        }
-      }
+          label: (ctx) => {
+            const label = ctx.dataset.label || "";
+            return `${label}: ${Math.round(Number(ctx.raw)).toLocaleString()} MiB`;
+          },
+        },
+      },
     },
     scales: {
       y: {
         ticks: {
-          callback: (val) => val.toLocaleString(),
-        }
-      }
-    }
+          callback: (val: string | number) => Number(val).toLocaleString(),
+        },
+        title: {
+          display: true,
+          text: "Memory (MiB)",
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Date",
+        },
+      },
+    },
   };
 
   return (

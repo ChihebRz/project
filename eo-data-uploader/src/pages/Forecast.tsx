@@ -112,7 +112,7 @@ const Forecast: React.FC = () => {
               />
               <ForecastTable forecast={forecastData.forecast} />
             </>
-          ) : forecastData && !forecastData.forecast ? (
+          ) : forecastData && forecastData.forecast?.length === 0 ? (
             <p>⚠️ No forecast available for this VM.</p>
           ) : null}
         </div>

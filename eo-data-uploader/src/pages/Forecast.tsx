@@ -5,6 +5,7 @@ import StatusCard from "../components/StatusCard";
 import MetricsPanel from "../components/MetricsPanel";
 import ForecastTable from "../components/ForecastTable";
 import Dashboard from "../components/Dashboard";
+import MainLayout from "@/components/Layout/MainLayout";
 import "./Forecast.css";
 
 const DEFAULT_VM = "Aos_Server";
@@ -65,59 +66,61 @@ const Forecast: React.FC = () => {
   };
 
   return (
-    <div className="forecast-page">
-      <div className="tabs">
-        <button
-          className={tab === "dashboard" ? "active-tab" : ""}
-          onClick={() => setTab("dashboard")}
-        >
-          🧭 Tableau de bord
-        </button>
-        <button
-          className={tab === "vm" ? "active-tab" : ""}
-          onClick={() => setTab("vm")}
-        >
-          🖥️ Prévision VM
-        </button>
-      </div>
-
-      {tab === "dashboard" && <Dashboard />}
-
-      {tab === "vm" && (
-        <div className="vm-forecast">
-          <h2>📊 VM Memory Forecast</h2>
-
-          <select value={selectedVM} onChange={(e) => handleSelect(e.target.value)}>
-            <option value="">Select VM...</option>
-            {vmList.map((vm) => (
-              <option key={vm} value={vm}>
-                {vm}
-              </option>
-            ))}
-          </select>
-
-          {error && <p style={{ color: "red" }}>{error}</p>}
-
-          {forecastData?.forecast?.length > 0 ? (
-            <>
-              <StatusCard
-                status={forecastData.status}
-                cutDate={forecastData.cut_date}
-                provisioned={forecastData.provisioned_mib}
-              />
-              <MetricsPanel data={forecastData} />
-              <ForecastChart
-                forecast={forecastData.forecast}
-                provisioned={forecastData.provisioned_mib}
-              />
-              <ForecastTable forecast={forecastData.forecast} />
-            </>
-          ) : forecastData && forecastData.forecast?.length === 0 ? (
-            <p>⚠️ No forecast available for this VM.</p>
-          ) : null}
+    <MainLayout>
+      <div className="forecast-page">
+        <div className="tabs">
+          <button
+            className={tab === "dashboard" ? "active-tab" : ""}
+            onClick={() => setTab("dashboard")}
+          >
+            🧭 Tableau de bord
+          </button>
+          <button
+            className={tab === "vm" ? "active-tab" : ""}
+            onClick={() => setTab("vm")}
+          >
+            🖥️ Prévision VM
+          </button>
         </div>
-      )}
-    </div>
+
+        {tab === "dashboard" && <Dashboard />}
+
+        {tab === "vm" && (
+          <div className="vm-forecast">
+            <h2>📊 VM Memory Forecast</h2>
+
+            <select value={selectedVM} onChange={(e) => handleSelect(e.target.value)}>
+              <option value="">Select VM...</option>
+              {vmList.map((vm) => (
+                <option key={vm} value={vm}>
+                  {vm}
+                </option>
+              ))}
+            </select>
+
+            {error && <p style={{ color: "red" }}>{error}</p>}
+
+            {forecastData?.forecast?.length > 0 ? (
+              <>
+                <StatusCard
+                  status={forecastData.status}
+                  cutDate={forecastData.cut_date}
+                  provisioned={forecastData.provisioned_mib}
+                />
+                <MetricsPanel data={forecastData} />
+                <ForecastChart
+                  forecast={forecastData.forecast}
+                  provisioned={forecastData.provisioned_mib}
+                />
+                <ForecastTable forecast={forecastData.forecast} />
+              </>
+            ) : forecastData && forecastData.forecast?.length === 0 ? (
+              <p>⚠️ No forecast available for this VM.</p>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </MainLayout>
   );
 };
 

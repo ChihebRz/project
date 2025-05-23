@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart, Upload, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -51,6 +50,18 @@ const Index = () => {
       title: "AI Assistant",
       description: "Intelligent chatbot to help you navigate and understand your data",
       link: "/chatbot",
+    },
+    {
+      icon: <BarChart className="h-6 w-6" />,
+      title: "Cluster Analysis",
+      description: "Group and analyze your data using advanced clustering algorithms",
+      link: "/cluster",
+    },
+    {
+      icon: <BarChart className="h-6 w-6" />,
+      title: "Forecasting",
+      description: "Predict future trends and values with our forecasting tools",
+      link: "/forecast",
     },
   ];
 

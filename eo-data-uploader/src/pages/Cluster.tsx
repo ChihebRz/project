@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './cluster.css'; // ✅ Make sure this file exists in the same folder or adjust path
 import ClusterAnalysis from '../components/ClusterAnalysis';
+import MainLayout from '@/components/Layout/MainLayout';
+
 const Cluster = () => {
   const [mode, setMode] = useState<'manual' | 'selector' | 'analysis'>('manual');
 
@@ -75,62 +77,73 @@ const Cluster = () => {
   };
 
   return (
-    <div className="container">
-      <h1 className="title">🧠 VM Resource Cluster Predictor</h1>
+    <MainLayout>
+      <div className="container">
+        <h1 className="title">🧠 VM Resource Cluster Predictor</h1>
 
-      <div className="tabs">
-        <button className={mode === 'manual' ? 'active' : ''} onClick={() => setMode('manual')}>
-          Manual Input
-        </button>
-        <button className={mode === 'selector' ? 'active' : ''} onClick={() => setMode('selector')}>
-          VM Selector
-        </button>
-        <button className={mode === 'analysis' ? 'active' : ''} onClick={() => setMode('analysis')}>
-          Cluster Analysis
-        </button>
-      </div>
-
-      <div className="main-content">
-        {mode === 'analysis' ? (
-          <ClusterAnalysis />
-        ) : (
-          <>
-            <div className="left-panel">
-              {mode === 'manual' ? (
-                <div className="card">
-                  <h2>Manual Input</h2>
+        {/* New layout: Manual Input and VM Selector side by side, Cluster Analysis below */}
+        <div className="top-panels">
+          {/* Manual Input Card */}
+          <div className="left-panel">
+            <div className="card">
+              <div className="card-header manual">
+                <span className="icon">{String.fromCodePoint(0x1F4BB)}</span>
+                Entrée Manuelle
+              </div>
+              <form className="manual-form" onSubmit={e => { e.preventDefault(); predictCluster(); }}>
+                <div className="manual-grid">
                   {[
-                    'cpu', 'memory', 'nics', 'disks', 'in_use_mib',
-                    'sockets', 'cores_per_socket', 'capacity_mib', 'provisioned_mib'
-                  ].map((key) => (
-                    <div key={key} className="input-group">
-                      <label>{key.replace(/_/g, ' ').toUpperCase()}</label>
-                      <input
-                        type="number"
-                        value={resources[key as keyof typeof resources]}
-                        onChange={(e) => handleManualChange(key, e.target.value)}
-                      />
-                    </div>
-                  ))}
-                  <button className="primary" onClick={predictCluster}>🔍 Predict Cluster</button>
+                    { key: 'cpu', label: 'CPU' },
+                    { key: 'memory', label: 'MEMORY' },
+                    { key: 'nics', label: 'NICS' },
+                    { key: 'disks', label: 'DISKS' },
+                    { key: 'in_use_mib', label: 'IN USE MIB' },
+                    { key: 'sockets', label: 'SOCKETS' },
+                    { key: 'cores_per_socket', label: 'CORES PER SOCKET' },
+                    { key: 'capacity_mib', label: 'CAPACITY MIB' },
+                    { key: 'provisioned_mib', label: 'PROVISIONED MIB' },
+                  ].map(({ key, label }) => (
+                  <div key={key} className="input-group">
+                    <label>{label}</label>
+                    <input
+                      type="number"
+                      value={resources[key as keyof typeof resources]}
+                      onChange={(e) => handleManualChange(key, e.target.value)}
+                    />
+                  </div>
+                ))}
                 </div>
-              ) : (
-                <div className="card">
-                  <h2>Select VM</h2>
-                  <select value={selectedVM} onChange={(e) => setSelectedVM(e.target.value)}>
-                    <option value="">-- Choose a VM --</option>
-                    {vms.map((vm, i) => (
-                      <option key={i} value={vm.VM}>{vm.VM}</option>
-                    ))}
-                  </select>
-                  <button className="primary" onClick={analyzeVM} disabled={!selectedVM}>Analyze</button>
-                </div>
-              )}
+                <button className="primary" type="submit">Prédire le Cluster</button>
+              </form>
             </div>
-
-            <div className="right-panel">
-              <div className="card">
-                <h2>Prediction Result</h2>
+          </div>
+          {/* VM Selector Card */}
+          <div className="middle-panel">
+            <div className="card">
+              <div className="card-header selector">
+                <span className="icon">{String.fromCodePoint(0x1F5C3)}</span>
+                Sélectionner une VM
+              </div>
+              <form className="selector-form" onSubmit={e => { e.preventDefault(); analyzeVM(); }}>
+                <label htmlFor="vm-select">Machines Virtuelles</label>
+                <select id="vm-select" value={selectedVM} onChange={(e) => setSelectedVM(e.target.value)}>
+                  <option value="">-- Sélectionner une VM --</option>
+                  {vms.map((vm, i) => (
+                    <option key={i} value={vm.VM}>{vm.VM}</option>
+                  ))}
+                </select>
+                <button className="analyze-btn" type="submit" disabled={!selectedVM}>Analyser la VM</button>
+              </form>
+            </div>
+          </div>
+          {/* Prediction Result Card */}
+          <div className="right-panel">
+            <div className="card">
+              <div className="card-header prediction">
+                <span className="icon">{String.fromCodePoint(0x1F4C8)}</span>
+                Résultat de Prédiction
+              </div>
+              <div className="prediction-panel">
                 {vmClusterMessage && (
                   <div className="cluster-message success">{vmClusterMessage}</div>
                 )}
@@ -142,14 +155,19 @@ const Cluster = () => {
                     )}
                   </>
                 ) : (
-                  <p className="muted">No prediction yet.</p>
+                  <p className="muted">Aucune prédiction. Utilisez l'entrée manuelle ou sélectionnez une VM.</p>
                 )}
               </div>
             </div>
-          </>
-        )}
+          </div>
+        </div>
+
+        {/* Cluster Analysis below, full width */}
+        <div className="bottom-panel">
+          <ClusterAnalysis />
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

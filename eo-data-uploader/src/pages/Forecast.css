@@ -1,8 +1,9 @@
 .forecast-page {
   font-family: 'Segoe UI', sans-serif;
-  padding: 30px 40px;
+  padding: 20px;
   width: 100%;
   box-sizing: border-box;
+  margin-top: 0;
 }
 
 .vm-forecast {

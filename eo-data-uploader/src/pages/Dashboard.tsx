@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BarChart, Database, Server, Cpu, HardDrive, Calendar, Info, Shield, Cloud, HardDrive as StorageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,9 +6,22 @@ import MainLayout from "@/components/Layout/MainLayout";
 import DashboardCard from "@/components/Dashboard/DashboardCard";
 import StatCard from "@/components/Dashboard/StatCard";
 import PowerBIEmbed from "@/components/PowerBI/PowerBIEmbed";
+import axios from "axios";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [stats, setStats] = useState({
+    total: 0,
+    avgMemory: 0,
+    avgCPU: 0,
+    storageUsed: 0,
+  });
+
+  useEffect(() => {
+    axios.get("http://localhost:5001/api/dashboard-stats").then(res => {
+      setStats(res.data);
+    });
+  }, []);
 
   return (
     <MainLayout>
@@ -25,42 +37,32 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Records"
-            value="1,284,934"
+            title="Total VMS"
+            value={stats.total.toLocaleString()}
             icon={<Database className="h-5 w-5" />}
-            trend={{ value: 12.5, label: "since last month", positive: true }}
             delay={1}
           />
           <StatCard
-            title="Servers Monitored"
-            value="128"
+            title="Average Memory per VM"
+            value={stats.avgMemory.toLocaleString() + " MB"}
             icon={<Server className="h-5 w-5" />}
-            trend={{ value: 4, label: "since last month", positive: true }}
             delay={2}
           />
           <StatCard
-            title="Avg. CPU Usage"
-            value="42%"
+            title="Average CPU per VM"
+            value={stats.avgCPU.toFixed(2)}
             icon={<Cpu className="h-5 w-5" />}
-            trend={{ value: 3.2, label: "since last week", positive: false }}
             delay={3}
           />
           <StatCard
             title="Storage Used"
-            value="4.7 TB"
+            value={stats.storageUsed.toLocaleString() + " MiB"}
             icon={<HardDrive className="h-5 w-5" />}
-            trend={{ value: 8.3, label: "since last month", positive: true }}
             delay={4}
           />
         </div>
 
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="cpu">CPU Metrics</TabsTrigger>
-            <TabsTrigger value="disk">Disk Metrics</TabsTrigger>
-            <TabsTrigger value="info">System Info</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="overview">
           
           <TabsContent value="overview" className="mt-6">
             <PowerBIEmbed
@@ -68,42 +70,6 @@ const Dashboard = () => {
               height={600}
               title="System Overview Dashboard"
             />
-          </TabsContent>
-          
-          <TabsContent value="cpu" className="mt-6">
-            <Card>
-              <CardContent className="p-0">
-                <div className="text-center p-12 text-muted-foreground">
-                  <Cpu className="w-12 h-12 mx-auto opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">CPU Dashboard</h3>
-                  <p>Loading CPU metrics dashboard...</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="disk" className="mt-6">
-            <Card>
-              <CardContent className="p-0">
-                <div className="text-center p-12 text-muted-foreground">
-                  <HardDrive className="w-12 h-12 mx-auto opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Disk Metrics Dashboard</h3>
-                  <p>Loading disk metrics dashboard...</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="info" className="mt-6">
-            <Card>
-              <CardContent className="p-0">
-                <div className="text-center p-12 text-muted-foreground">
-                  <Server className="w-12 h-12 mx-auto opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">System Info Dashboard</h3>
-                  <p>Loading system information dashboard...</p>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
         

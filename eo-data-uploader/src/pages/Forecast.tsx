@@ -87,7 +87,7 @@ const Forecast: React.FC = () => {
 
         {tab === "vm" && (
           <div className="vm-forecast">
-            <h2>📊 VM Memory Forecast</h2>
+            <h2>📊 VM Disk Usage Forecast</h2>
 
             <select value={selectedVM} onChange={(e) => handleSelect(e.target.value)}>
               <option value="">Select VM...</option>

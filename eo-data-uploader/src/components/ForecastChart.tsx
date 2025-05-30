@@ -70,7 +70,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({ forecast, provisioned }) 
         },
         title: {
           display: true,
-          text: "Memory (MiB)",
+          text: "Disk Space (MiB)",
         },
       },
       x: {

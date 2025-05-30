@@ -10,6 +10,7 @@ type Message = {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  data?: any;
 };
 
 const ChatbotPlaceholder = () => {
@@ -48,12 +49,13 @@ const ChatbotPlaceholder = () => {
 
       const data = await response.json();
       const assistantReply = data.answer || "❌ No answer received.";
+      const sqlData = data.data;
 
       const delay = Math.min(3000, assistantReply.length * 25); // up to 3s max
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
-          { text: assistantReply, isUser: false, timestamp: new Date() },
+          { text: assistantReply, isUser: false, timestamp: new Date(), data: sqlData },
         ]);
         setIsTyping(false);
       }, delay);
@@ -124,6 +126,34 @@ const ChatbotPlaceholder = () => {
                 )}
               >
                 <p>{message.text}</p>
+                {message.data && !message.isUser && (
+                  <div className="mt-2">
+                    {Array.isArray(message.data) && message.data.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="text-xs border border-gray-300 rounded w-full">
+                          <thead>
+                            <tr>
+                              {Object.keys(message.data[0]).map((col) => (
+                                <th key={col} className="border px-2 py-1 bg-gray-100 text-gray-700">{col}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {message.data.map((row: any, i: number) => (
+                              <tr key={i}>
+                                {Object.values(row).map((val, j) => (
+                                  <td key={j} className="border px-2 py-1">{String(val)}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <pre className="bg-gray-100 rounded p-2 text-xs text-gray-700 mt-1">{JSON.stringify(message.data, null, 2)}</pre>
+                    )}
+                  </div>
+                )}
                 <div className="text-[10px] opacity-70 mt-1">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",

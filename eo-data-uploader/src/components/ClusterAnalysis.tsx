@@ -11,13 +11,13 @@ const clusters = [
     icon: '🖥️',
     title: "VMs de Production Standard",
     subtitle: "VMs équilibrées, très répandues",
-    details: "1125 VMs (majorité)",
+    details: "",
     specs: [
       { label: 'RAM', value: '~16 Go' },
       { label: 'CPU', value: '~5 (2-4 cœurs)' },
       { label: 'Disque provisionné', value: '~275 Go' },
-      { label: 'Utilisation mémoire', value: '~46%' },
-      { label: 'Utilisation disque', value: '~81%' },
+      { label: 'Utilisation disque', value: '~46%' },
+      { label: 'Taux de provisionnement', value: '~81%' },
     ],
     usageTitle: "Cas d'usage typiques",
     usage: [
@@ -29,7 +29,7 @@ const clusters = [
     recTitle: "Recommandations Cluster 0",
     recommendations: [
       { icon: '✔️', text: "Bonne efficacité : ratio mémoire/disque bien équilibré." },
-      { icon: '🛠️', text: "Optimisation possible : vérifier les VMs <50% RAM utilisée → possibilité de réduire la RAM." },
+      { icon: '🛠️', text: "Optimisation possible : vérifier les VMs <50% Disk utilisée → possibilité de réduire le Disk." },
       { icon: '🤖', text: "Automation recommandée : ce groupe étant majoritaire, idéal pour standardiser les templates de déploiement." }
     ]
   },
@@ -41,13 +41,13 @@ const clusters = [
     icon: '⚠️',
     title: "VM Très Haute Capacité ou Anomalie",
     subtitle: "VM très rare mais surprovisionnée",
-    details: "1 seule VM",
+    details: "",
     specs: [
       { label: 'RAM', value: '12 Go (pas très élevé)' },
       { label: 'CPU', value: '4' },
       { label: 'Disque provisionné', value: '~39 To' },
       { label: 'Disque utilisé', value: '~35 To' },
-      { label: 'Disk Usage Ratio', value: '44%' },
+      { label: 'Taux de provisionnement', value: '44%' },
     ],
     usageTitle: "Cas d'usage probables",
     usage: [
@@ -72,13 +72,13 @@ const clusters = [
     icon: '🗄️',
     title: "VMs Surprovisionnées / Très Performantes",
     subtitle: "VMs critiques ou intensives",
-    details: "32 VMs",
+    details: "",
     specs: [
       { label: 'RAM', value: '~138 Go' },
       { label: 'CPU', value: '~32' },
       { label: 'Disque provisionné', value: '~2.1 To' },
-      { label: 'Disk Usage Ratio', value: '~81%' },
-      { label: 'Utilisation RAM', value: '58%' },
+      { label: 'Taux de provisionnement', value: '~81%' },
+      { label: 'Utilisation disque', value: '58%' },
     ],
     usageTitle: "Cas d'usage typiques",
     usage: [
@@ -92,7 +92,7 @@ const clusters = [
       { icon: '🛠️', text: "Surveiller les performances : monitorer la charge CPU/RAM pour garantir la qualité de service." },
       { icon: '🛠️', text: "Réserver ces machines à des usages réellement critiques." },
       { icon: '⚠️', text: "Coût élevé → limiter la prolifération de ce type de VM." },
-      { icon: '🛠️', text: "Réduction possible si certaines VMs sont surprovisionnées (RAM > 120 Go mais faible usage)." }
+      { icon: '🛠️', text: "Réduction possible si certaines VMs sont surprovisionnées ." }
     ]
   }
 ];
